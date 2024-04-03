@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+}
+
+group 'src.org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class' : 'org.example.Main'
+        )
+    }
+}
+
+task copyJar(type: Copy) {
+    dependsOn 'jar'
+    from file("$buildDir/libs/Java2_9-1.0-SNAPSHOT.jar")
+    into file("$rootDir/src/")
+}
+
+task removeJar(type: Delete) {
+    delete file("$rootDir/src/java2_9-1.0-SNAPSHOT.jar")
+}
+
+task buildImage(type: Exec) {
+    dependsOn 'copyJar'
+    finalizedBy 'removeJar'
+    commandLine 'docker', 'build', '-t', 'java2_9-1.0', './src/'
+}
+
+task runDocker(type: Exec) {
+    dependsOn 'buildImage'
+    commandLine 'docker', 'run', '--name', 'java2_9-1.0', 'java2_9-1.0'
+}
